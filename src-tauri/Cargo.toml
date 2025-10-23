@@ -1,10 +1,10 @@
 [package]
 name = "claude-miner"
-version = "0.1.0"
+version = "1.0.0"
 description = "A visual process monitor for Claude Code sessions"
-authors = [""]
+authors = ["JUKI-J"]
 license = "MIT"
-repository = ""
+repository = "https://github.com/JUKI-J/claudeminer"
 edition = "2021"
 
 [build-dependencies]
