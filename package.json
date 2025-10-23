@@ -1,0 +1,23 @@
+{
+  "name": "claude-miner",
+  "version": "0.1.0",
+  "description": "A visual process monitor for Claude Code sessions",
+  "main": "src/index.html",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "keywords": [
+    "claude-code",
+    "process-monitor",
+    "visualization",
+    "tauri",
+    "rust"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.0"
+  }
+}

@@ -1,0 +1,1008 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+    color: #e0e0e0;
+    padding: 12px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    margin-bottom: 15px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-content > div:first-child {
+    text-align: left;
+    flex: 1;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.coffee-button {
+    background: linear-gradient(135deg, #FFDD00, #FBB034);
+    border: none;
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(255, 221, 0, 0.3);
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.coffee-button .button-icon {
+    font-size: 1.2rem;
+}
+
+.coffee-button .button-text {
+    color: #000;
+}
+
+.coffee-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 221, 0, 0.5);
+}
+
+.settings-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.stat {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.stat.working {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.stat.resting {
+    border-color: #9E9E9E;
+    background: rgba(158, 158, 158, 0.1);
+}
+
+.stat.zombie {
+    border-color: #f44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-bottom: 3px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.mine-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.work-area,
+.rest-area,
+.zombie-area {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.work-area h3 {
+    color: #4CAF50;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.rest-area h3 {
+    color: #9E9E9E;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.zombie-area h3 {
+    color: #f44336;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.miners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    min-height: 80px;
+}
+
+.miner-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    cursor: pointer;
+}
+
+.miner-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.miner-card.working {
+    border-color: #4CAF50;
+    animation: pulse-green 2s infinite;
+}
+
+.miner-card.resting {
+    border-color: #9E9E9E;
+    opacity: 0.7;
+}
+
+.miner-card.zombie {
+    border-color: #f44336;
+    opacity: 0.8;
+    animation: blink 1s infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+    }
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
+.miner-badge {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.miner-card.working .miner-badge {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.miner-card.resting .miner-badge {
+    background: linear-gradient(135deg, #9E9E9E, #757575);
+    color: white;
+}
+
+.miner-card.zombie .miner-badge {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+}
+
+.miner-icon {
+    font-size: 3rem;
+    margin: 10px 0;
+}
+
+.miner-info {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-top: 10px;
+}
+
+.miner-cpu {
+    display: block;
+    margin-top: 5px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.kill-button {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.kill-button:hover {
+    background: #d32f2f;
+    transform: scale(1.05);
+}
+
+.kill-button:active {
+    transform: scale(0.95);
+}
+
+.refresh-info {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 8px;
+    color: #aaa;
+    font-size: 0.7rem;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    padding: 30px;
+    font-style: italic;
+}
+
+/* Smooth transitions for miner state changes */
+.miner-card {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.miner-icon {
+    transition: transform 0.3s ease;
+}
+
+.miner-card:hover .miner-icon {
+    transform: scale(1.2) rotate(10deg);
+}
+
+/* Working miner: pickaxe animation */
+.miner-card.working .miner-icon {
+    animation: mining 1.5s ease-in-out infinite;
+}
+
+@keyframes mining {
+    0%, 100% {
+        transform: rotate(-10deg);
+    }
+    50% {
+        transform: rotate(10deg);
+    }
+}
+
+/* Resting miner: breathing animation */
+.miner-card.resting .miner-icon {
+    animation: breathing 3s ease-in-out infinite;
+}
+
+@keyframes breathing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Zombie miner: floating animation */
+.miner-card.zombie .miner-icon {
+    animation: floating 2s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Card enter animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.miner-card {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+/* Stats number animation */
+.stat-value {
+    transition: all 0.3s ease;
+}
+
+.stat-value.updated {
+    animation: numberPop 0.5s ease-out;
+}
+
+@keyframes numberPop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+        color: #4CAF50;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Settings Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border-radius: 20px;
+    max-width: 560px;
+    width: 90%;
+    max-height: 85vh;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 0.5px rgba(255, 255, 255, 0.1) inset;
+    animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 32px 24px 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.close-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #999;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.close-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.close-button:active {
+    transform: scale(0.95);
+}
+
+.modal-body {
+    padding: 24px 32px 32px 32px;
+    overflow-y: auto;
+    max-height: calc(85vh - 100px);
+}
+
+.setting-item {
+    display: block;
+    margin-bottom: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-item label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    cursor: pointer;
+    letter-spacing: -0.02em;
+}
+
+.setting-item label:not(:has(input[type="checkbox"])) {
+    cursor: default;
+    margin-bottom: 8px;
+}
+
+.setting-item input[type="checkbox"] {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    border: none;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.setting-item input[type="checkbox"]:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.setting-item input[type="checkbox"]:checked {
+    background: #4CAF50;
+}
+
+.setting-item input[type="checkbox"]:checked:hover {
+    background: #45a049;
+}
+
+.setting-item input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.setting-item input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+
+.setting-item select {
+    width: 100%;
+    padding: 10px 36px 10px 12px;
+    background: rgba(255, 255, 255, 0.05) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="rgba(255,255,255,0.4)"><path d="M2 4l4 4 4-4z"/></svg>') no-repeat right 12px center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+}
+
+.setting-item select:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.setting-item select:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(76, 175, 80, 0.5);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.08);
+}
+
+.setting-item select option {
+    background: #1a1a1a;
+    color: #ffffff;
+    padding: 12px;
+}
+
+.setting-description {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    margin-bottom: 0;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+/* ==========================================
+   METAVERSE-STYLE MINING WORLD
+   ========================================== */
+
+.mining-world {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    background: linear-gradient(180deg,
+        #1a1a2e 0%,      /* Mining zone - dark blue */
+        #16213e 33%,     /* Rest zone - medium blue */
+        #0f3460 66%,     /* Danger zone - deep blue */
+        #0a2540 100%
+    );
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    margin: 10px 0;
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.world-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.mining-zone,
+.rest-zone,
+.danger-zone {
+    position: absolute;
+    left: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mining-zone {
+    top: 20px;
+}
+
+.rest-zone {
+    top: calc(33.33% + 10px);
+}
+
+.danger-zone {
+    top: calc(66.66% + 10px);
+}
+
+/* Miner Entity */
+.miner-entity {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+    z-index: 10;
+    will-change: transform;
+    /* Hardware acceleration for smooth movement */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+.miner-entity:hover {
+    filter: brightness(1.3) drop-shadow(0 0 10px currentColor);
+    z-index: 20;
+}
+
+.miner-entity:hover .miner-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -10px);
+}
+
+.miner-sprite {
+    font-size: 2.5rem;
+    text-align: center;
+    line-height: 50px;
+    animation: float 2s ease-in-out infinite;
+}
+
+/* Status-specific animations */
+.miner-entity.working .miner-sprite {
+    animation: mining 1s ease-in-out infinite;
+}
+
+@keyframes mining {
+    0%, 100% {
+        transform: rotate(-10deg) translateY(0);
+    }
+    25% {
+        transform: rotate(-15deg) translateY(-5px);
+    }
+    50% {
+        transform: rotate(-5deg) translateY(0);
+    }
+    75% {
+        transform: rotate(-15deg) translateY(-5px);
+    }
+}
+
+.miner-entity.resting .miner-sprite {
+    animation: breathing 3s ease-in-out infinite;
+}
+
+@keyframes breathing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.miner-entity.zombie .miner-sprite {
+    animation: floating 2s ease-in-out infinite, shake 0.5s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-15px) rotate(5deg);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-2px);
+    }
+    75% {
+        transform: translateX(2px);
+    }
+}
+
+.miner-pid {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.miner-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background: rgba(0, 0, 0, 0.95);
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.miner-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.95);
+}
+
+/* Legend */
+.legend {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 8px 0 0 0;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+}
+
+.legend-icon {
+    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.legend-icon.working {
+    animation: mining 1s ease-in-out infinite;
+}
+
+.legend-icon.resting {
+    animation: breathing 3s ease-in-out infinite;
+}
+
+.legend-icon.zombie {
+    animation: floating 2s ease-in-out infinite;
+}
+
+.legend-tip {
+    flex-basis: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #888;
+    margin-top: 3px;
+}
+
+/* Stats Panel - Updated for horizontal layout */
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-card.working {
+    border-color: rgba(76, 175, 80, 0.3);
+}
+
+.stat-card.working .stat-icon {
+    animation: mining 1s ease-in-out infinite;
+}
+
+.stat-card.resting {
+    border-color: rgba(33, 150, 243, 0.3);
+}
+
+.stat-card.resting .stat-icon {
+    animation: breathing 3s ease-in-out infinite;
+}
+
+.stat-card.zombie {
+    border-color: rgba(244, 67, 54, 0.3);
+}
+
+.stat-card.zombie .stat-icon {
+    animation: floating 2s ease-in-out infinite;
+}
+
+.stat-card.total {
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* Hide old mine-container */
+.mine-container {
+    display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .mining-world {
+        height: 250px;
+    }
+
+    .miner-entity {
+        width: 40px;
+        height: 40px;
+    }
+
+    .miner-sprite {
+        font-size: 2rem;
+        line-height: 40px;
+    }
+
+    .stats-panel {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .legend {
+        gap: 15px;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+    }
+}
+
+/* Animation performance optimization */
+@media (prefers-reduced-motion: reduce) {
+    .miner-sprite,
+    .legend-icon {
+        animation: none !important;
+    }
+
+    .miner-entity {
+        transition: none;
+    }
+}
