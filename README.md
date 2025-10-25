@@ -1,5 +1,5 @@
 # 🪨 ClaudeMiner v1.1.1
-[![Version](https://img.shields.io/badge/version-1.1.0-blue)]()
+[![Version](https://img.shields.io/badge/version-1.1.1-blue)]()
 [![Platform](https://img.shields.io/badge/platform-macOS-black)]()
 [![Architecture](https://img.shields.io/badge/arch-Universal-orange)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
