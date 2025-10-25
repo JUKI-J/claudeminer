@@ -59,3 +59,4 @@ logs/
 # Cache
 .cache/
 *.tmp
+/.env.notarization

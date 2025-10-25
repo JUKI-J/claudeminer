@@ -1,12 +1,13 @@
 {
   "name": "claude-miner",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "A visual process monitor for Claude Code sessions",
   "main": "src/index.html",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
-    "build": "tauri build"
+    "build": "tauri build",
+    "build:dmg": "./scripts/build-dmg.sh"
   },
   "keywords": [
     "claude-code",

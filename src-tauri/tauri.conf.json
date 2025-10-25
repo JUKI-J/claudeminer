@@ -19,6 +19,18 @@
       },
       "notification": {
         "all": true
+      },
+      "dialog": {
+        "all": false,
+        "confirm": true
+      },
+      "fs": {
+        "all": false,
+        "readFile": true,
+        "scope": ["$HOME/.claude/**"]
+      },
+      "path": {
+        "all": true
       }
     },
     "systemTray": {
@@ -41,6 +53,16 @@
         "minimumSystemVersion": "10.13",
         "entitlements": "entitlements.plist",
         "signingIdentity": "Developer ID Application: JUKI JUNG (JJX75F53MA)"
+      },
+      "dmg": {
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        }
       }
     },
     "security": {

@@ -1,22 +1,19 @@
 // Tauri API - will be initialized after DOM loads
-let invoke, sendNotification, isPermissionGranted, requestPermission;
+let invoke, sendNotification, isPermissionGranted, requestPermission, listen;
 let t, setLanguage, updateUI_i18n, getCurrentLanguage, initI18n;
 
 // Initialize APIs safely
 function initializeAPIs() {
-    console.log('Initializing APIs...');
-
     // Check Tauri API
     if (!window.__TAURI__) {
         console.error('ERROR: window.__TAURI__ is not available!');
         throw new Error('Tauri API not loaded! Please restart the app.');
     }
-    console.log('Tauri API found:', window.__TAURI__);
 
     // Initialize Tauri API
     ({ invoke } = window.__TAURI__.tauri);
     ({ sendNotification, isPermissionGranted, requestPermission } = window.__TAURI__.notification);
-    console.log('invoke function:', invoke);
+    ({ listen } = window.__TAURI__.event);
 
     // Check i18n API
     if (!window.i18n) {
@@ -26,17 +23,14 @@ function initializeAPIs() {
 
     // Initialize i18n API
     ({ t, setLanguage, updateUI: updateUI_i18n, getCurrentLanguage, init: initI18n } = window.i18n);
-    console.log('i18n API initialized');
 }
 
 // State management
 let previousMiners = new Map();
-let notificationsEnabled = false;
+let notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
 let isLoading = false;
 let errorCount = 0;
 const MAX_ERROR_COUNT = 3;
-let refreshInterval = 2000; // Default: 2 seconds
-let refreshIntervalId = null;
 
 // Metaverse World
 let metaverseWorld = null;
@@ -77,6 +71,7 @@ async function initNotifications() {
         }
 
         notificationsEnabled = permissionGranted;
+        localStorage.setItem('notificationsEnabled', permissionGranted.toString());
 
         // Update checkbox to reflect current state
         const notificationsToggle = document.getElementById('notifications-toggle');
@@ -94,12 +89,9 @@ async function initNotifications() {
             }, 1500);
         } else if (!permissionGranted) {
             // Returning user without permission - show reminder
-            console.log('Notifications not permitted. Enable in System Preferences to get alerts.');
             setTimeout(() => {
                 showNotificationPermissionReminder();
             }, 2000);
-        } else {
-            console.log('✓ Notifications enabled');
         }
     } catch (error) {
         console.error('Failed to initialize notifications:', error);
@@ -292,7 +284,143 @@ function showNotificationPermissionReminder() {
     }, 10000);
 }
 
-// Add CSS animations for reminder
+// Custom confirm dialog (web-style)
+function showConfirmDialog(message) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-out;
+        `;
+
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: rgba(30, 30, 30, 0.98);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        `;
+
+        dialog.innerHTML = `
+            <div style="margin-bottom: 28px;">
+                <div style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 12px;">
+                    프로세스 종료 확인
+                </div>
+                <div style="color: #ccc; font-size: 1rem; line-height: 1.6;">
+                    ${message}
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button id="cancel-btn" style="
+                    padding: 14px 28px;
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: white;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    transition: all 0.2s;
+                ">취소</button>
+                <button id="confirm-btn" style="
+                    padding: 14px 28px;
+                    background: linear-gradient(135deg, #f44336, #d32f2f);
+                    border: none;
+                    color: white;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4);
+                    transition: all 0.2s;
+                ">종료</button>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        const cancelBtn = dialog.querySelector('#cancel-btn');
+        const confirmBtn = dialog.querySelector('#confirm-btn');
+
+        const close = (result) => {
+            overlay.style.animation = 'fadeOut 0.2s ease-in';
+            dialog.style.animation = 'scaleOut 0.2s ease-in';
+            setTimeout(() => overlay.remove(), 200);
+            resolve(result);
+        };
+
+        cancelBtn.onclick = () => close(false);
+        confirmBtn.onclick = () => close(true);
+        overlay.onclick = (e) => {
+            if (e.target === overlay) close(false);
+        };
+
+        // Hover effects
+        cancelBtn.onmouseenter = () => {
+            cancelBtn.style.background = 'rgba(255, 255, 255, 0.15)';
+        };
+        cancelBtn.onmouseleave = () => {
+            cancelBtn.style.background = 'rgba(255, 255, 255, 0.08)';
+        };
+        confirmBtn.onmouseenter = () => {
+            confirmBtn.style.transform = 'translateY(-2px)';
+            confirmBtn.style.boxShadow = '0 6px 20px rgba(244, 67, 54, 0.5)';
+        };
+        confirmBtn.onmouseleave = () => {
+            confirmBtn.style.transform = 'translateY(0)';
+            confirmBtn.style.boxShadow = '0 4px 16px rgba(244, 67, 54, 0.4)';
+        };
+    });
+}
+
+// Show success toast
+function showSuccessToast(message) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    `;
+    toast.innerHTML = `
+        <div style="font-size: 24px;">✓</div>
+        <div>${message}</div>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animations for reminder and dialogs
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
@@ -316,6 +444,38 @@ style.textContent = `
             opacity: 0;
         }
     }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes scaleOut {
+        from {
+            transform: scale(1);
+            opacity: 1;
+        }
+        to {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+    }
 `;
 document.head.appendChild(style);
 
@@ -327,7 +487,7 @@ function getMinerIcon(status) {
         case 'resting':
             return '😴';
         case 'zombie':
-            return '👻';
+            return '🧟';
         default:
             return '👷';
     }
@@ -372,20 +532,34 @@ function createMinerCard(miner) {
         killBtn.textContent = t('killProcess');
         killBtn.onclick = async (e) => {
             e.stopPropagation();
-            if (confirm(`${t('confirmKill')}${miner.pid}?`)) {
+            const confirmMsg = t('confirmKill', { pid: miner.pid });
+            console.log('[Kill Button] Clicked, showing confirm:', confirmMsg);
+
+            const confirmed = await showConfirmDialog(confirmMsg);
+
+            if (confirmed) {
+                console.log('[Kill Button] Confirmed, killing PID:', miner.pid);
                 try {
                     await invoke('kill_miner', { pid: miner.pid });
-                    if (notificationsEnabled) {
-                        sendNotification({
-                            title: t('title'),
-                            body: t('processTerminated', { pid: miner.pid })
-                        });
-                    }
+                    console.log('[Kill Button] Successfully killed PID:', miner.pid);
+
+                    // Show success message
+                    showSuccessToast(`프로세스 #${miner.pid}이(가) 종료되었습니다`);
+
+                    // Update UI immediately (multiple times to ensure cleanup happens)
                     await updateMiners();
+
+                    // Wait for SessionCleaner to process (runs every 60s)
+                    setTimeout(async () => {
+                        console.log('[Kill Button] Refreshing UI after cleanup delay');
+                        await updateMiners();
+                    }, 1000);
                 } catch (error) {
                     console.error('Failed to kill process:', error);
                     alert(`${t('errorKillingProcess')}: ${error}`);
                 }
+            } else {
+                console.log('[Kill Button] Cancelled');
             }
         };
         card.appendChild(killBtn);
@@ -408,19 +582,14 @@ function createMinerCard(miner) {
 
 // Update the UI with current miners
 async function updateMiners() {
-    console.log('updateMiners() called');
     if (isLoading) {
-        console.log('Already loading, skipping...');
         return;
     }
 
     isLoading = true;
 
     try {
-        console.log('Calling invoke("get_miners")...');
         const miners = await invoke('get_miners');
-        console.log('Received miners:', miners);
-        console.log('Number of miners:', miners.length);
         errorCount = 0; // Reset error count on success
 
         // Counters
@@ -438,21 +607,32 @@ async function updateMiners() {
             // Check for state changes (for notifications)
             const prevMiner = previousMiners.get(miner.pid);
 
-            if (prevMiner && notificationsEnabled) {
+            if (prevMiner) {
                 // Working -> Resting (task completed!)
                 if (prevMiner.status === 'working' && miner.status === 'resting') {
-                    sendNotification({
-                        title: t('taskCompleted'),
-                        body: t('taskCompletedBody', { pid: miner.pid })
-                    });
+                    console.log(`🎯 Hook Event Detected: PID ${miner.pid} → resting (Stop event)`);
+                    if (notificationsEnabled) {
+                        sendNotification({
+                            title: t('taskCompleted'),
+                            body: t('taskCompletedBody', { pid: miner.pid })
+                        });
+                    }
+                }
+
+                // Resting -> Working (task started!)
+                if (prevMiner.status === 'resting' && miner.status === 'working') {
+                    console.log(`🎯 Hook Event Detected: PID ${miner.pid} → working (UserPromptSubmit event)`);
                 }
 
                 // Normal -> Zombie (terminal closed)
                 if (prevMiner.has_terminal && !miner.has_terminal) {
-                    sendNotification({
-                        title: t('zombieDetected'),
-                        body: t('zombieDetectedBody', { pid: miner.pid })
-                    });
+                    console.log(`⚠️ State Change: PID ${miner.pid} → zombie (terminal closed)`);
+                    if (notificationsEnabled) {
+                        sendNotification({
+                            title: t('zombieDetected'),
+                            body: t('zombieDetectedBody', { pid: miner.pid })
+                        });
+                    }
                 }
             }
 
@@ -491,11 +671,6 @@ async function updateMiners() {
         document.getElementById('resting-count').textContent = restingCount;
         document.getElementById('zombie-count').textContent = zombieCount;
 
-        // Update last refresh time
-        const now = new Date();
-        document.getElementById('last-update').textContent =
-            `${t('lastUpdated')}: ${now.toLocaleTimeString()}`;
-
         // Update system tray with all counts
         try {
             await invoke('update_tray_menu', {
@@ -523,18 +698,34 @@ async function updateMiners() {
 // Setup settings modal
 function setupSettings() {
     const settingsBtn = document.getElementById('settings-btn');
+    const testNotificationBtn = document.getElementById('test-notification-btn');
     const modal = document.getElementById('settings-modal');
     const closeBtn = document.getElementById('close-modal');
     const notificationsToggle = document.getElementById('notifications-toggle');
-    const refreshIntervalSelect = document.getElementById('refresh-interval');
     const languageSelect = document.getElementById('language-select');
+
+    // Test notification button
+    testNotificationBtn.addEventListener('click', async () => {
+        console.log('[TestNotification] Button clicked');
+        try {
+            const result = await invoke('send_test_notification');
+            console.log('[TestNotification] Result:', result);
+
+            // Show visual feedback
+            testNotificationBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                testNotificationBtn.style.transform = 'scale(1)';
+            }, 200);
+        } catch (error) {
+            console.error('[TestNotification] Failed:', error);
+        }
+    });
 
     // Open modal
     settingsBtn.addEventListener('click', () => {
         modal.style.display = 'flex';
         // Load current settings
         notificationsToggle.checked = notificationsEnabled;
-        refreshIntervalSelect.value = refreshInterval.toString();
         languageSelect.value = getCurrentLanguage();
     });
 
@@ -557,20 +748,12 @@ function setupSettings() {
         } else {
             notificationsEnabled = false;
         }
-        console.log('Notifications:', notificationsEnabled ? 'enabled' : 'disabled');
-    });
-
-    // Handle refresh interval change
-    refreshIntervalSelect.addEventListener('change', (e) => {
-        refreshInterval = parseInt(e.target.value);
-        restartRefreshInterval();
-        console.log('Refresh interval changed to:', refreshInterval, 'ms');
+        localStorage.setItem('notificationsEnabled', notificationsEnabled.toString());
     });
 
     // Handle language change
     languageSelect.addEventListener('change', (e) => {
         setLanguage(e.target.value);
-        console.log('Language changed to:', e.target.value);
     });
 }
 
@@ -583,8 +766,8 @@ async function handleMinerClick(minerEntity) {
 
     if (!miner) return;
 
-    // Check if it's a zombie
-    if (!miner.has_terminal) {
+    // Check if it's a zombie (either no terminal or zombie status)
+    if (!miner.has_terminal || miner.status === 'zombie') {
         const confirmMsg = `${t('confirmKill')}${pid}?`;
         if (confirm(confirmMsg)) {
             try {
@@ -630,20 +813,55 @@ async function handleMinerClick(minerEntity) {
     }
 }
 
-// Restart refresh interval
-function restartRefreshInterval() {
-    if (refreshIntervalId) {
-        clearInterval(refreshIntervalId);
-    }
-    refreshIntervalId = setInterval(updateMiners, refreshInterval);
+// Auto-refresh interval
+let refreshInterval = null;
+const REFRESH_INTERVAL_MS = 3000; // 3 seconds
 
-    // Update refresh rate display
-    document.getElementById('refresh-rate').textContent = `${refreshInterval / 1000}s`;
+function restartRefreshInterval() {
+    // Clear existing interval if any
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+
+    // Set up new interval to refresh every 3 seconds
+    refreshInterval = setInterval(() => {
+        updateMiners();
+    }, REFRESH_INTERVAL_MS);
+
+    console.log(`✅ Auto-refresh started (${REFRESH_INTERVAL_MS / 1000} second interval)`);
+}
+
+// Setup Tauri event listeners for real-time updates
+async function setupTauriEventListeners() {
+    console.log('🎧 Setting up Tauri event listeners...');
+
+    // Listen for session-created events
+    await listen('session-created', (event) => {
+        console.log('🌟 New session created:', event.payload);
+        // Immediately update UI
+        updateMiners();
+    });
+
+    // Listen for session-status-changed events
+    await listen('session-status-changed', (event) => {
+        console.log('🔄 Session status changed:', event.payload);
+        // Immediately update UI
+        updateMiners();
+    });
+
+    // Listen for session-terminated events
+    await listen('session-terminated', (event) => {
+        console.log('💀 Session terminated:', event.payload);
+        // Immediately update UI
+        updateMiners();
+    });
+
+    console.log('✅ Tauri event listeners setup complete');
 }
 
 // Initialize app
 async function init() {
-    console.log('=== App Initialization Started ===');
+    console.log('🚀 ClaudeMiner Starting...');
 
     // Initialize APIs first
     try {
@@ -662,19 +880,22 @@ async function init() {
     const miningWorldContainer = document.getElementById('mining-world');
     if (miningWorldContainer && window.MetaverseWorld) {
         metaverseWorld = new window.MetaverseWorld(miningWorldContainer);
-        console.log('Metaverse World initialized');
     }
 
     await initNotifications();
+
+    // Setup Tauri event listeners for real-time updates
+    await setupTauriEventListeners();
+
     await updateMiners();
 
     // Setup settings UI
     setupSettings();
 
-    // Auto-refresh
+    // Auto-refresh (backup polling for stability)
     restartRefreshInterval();
 
-    console.log('ClaudeMiner initialized');
+    console.log('✅ ClaudeMiner Ready');
 }
 
 // Start the app when DOM is ready
