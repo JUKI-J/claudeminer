@@ -1,161 +1,121 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
 
-use serde::{Deserialize, Serialize};
+// Refactored modules
+mod types;
+mod network;
+mod session;
+mod status;
+mod monitor;
+mod hooks;
+mod coordinator;
+mod notification;
+mod event;
+
+use types::Miner;
+use session::SessionState;
 use sysinfo::{System, Pid};
-use tauri::{Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, CustomMenuItem, AppHandle, Menu, MenuItem, Submenu};
+use tauri::{Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, CustomMenuItem, Menu, MenuItem, Submenu};
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
-use std::thread;
-use std::time::Duration;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-struct Miner {
-    pid: u32,
-    cpu_usage: f32,
-    memory: u64,
-    status: String,
-    has_terminal: bool,
-    name: String,
-}
-
-// Global state for CPU measurements (cached)
-type CpuCache = Arc<Mutex<HashMap<u32, f32>>>;
+// Type alias for shared sessions
+type SharedSessions = Arc<Mutex<HashMap<String, SessionState>>>;
 
 #[tauri::command]
-fn get_miners(cpu_cache: tauri::State<CpuCache>) -> Vec<Miner> {
-    let mut sys = System::new_all();
-    sys.refresh_all();
+fn get_miners(
+    shared_sessions: tauri::State<SharedSessions>,
+) -> Vec<Miner> {
+    println!("[get_miners] ===== CALLED =====");
+
+    // Get sessions from Coordinator's real-time monitoring
+    let sessions = shared_sessions.lock().unwrap();
 
     let mut miners = Vec::new();
 
-    // Write debug to file
-    use std::fs::OpenOptions;
-    use std::io::Write;
+    // Get fresh process info for memory
+    let mut sys = System::new_all();
+    sys.refresh_all();
 
-    let mut debug_file = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .open("/tmp/claudeminer_debug.log")
-        .unwrap();
+    println!("[get_miners] Retrieved {} sessions from Coordinator", sessions.len());
 
-    writeln!(debug_file, "=== Scanning for Claude processes ===").unwrap();
-    writeln!(debug_file, "Total processes: {}", sys.processes().len()).unwrap();
-
-    // Try to find specific Claude PIDs
-    let claude_pids = vec![40369, 21151, 56165, 96842, 72747];
-    writeln!(debug_file, "\nLooking for known Claude PIDs:").unwrap();
-    for check_pid in claude_pids {
-        let pid = Pid::from_u32(check_pid);
-        if let Some(process) = sys.process(pid) {
-            writeln!(debug_file, "  Found PID {}: name='{}', cmd={:?}",
-                check_pid, process.name(), process.cmd()).unwrap();
-        } else {
-            writeln!(debug_file, "  PID {} not found in sysinfo", check_pid).unwrap();
-        }
+    if sessions.is_empty() {
+        println!("[get_miners] WARNING: No sessions found! Coordinator may not be detecting sessions.");
     }
-    writeln!(debug_file, "").unwrap();
 
-    for (pid, process) in sys.processes() {
-        let name = process.name().to_string();
-
-        // Check if this is a Node process running 'claude'
-        let is_claude = if name.to_lowercase() == "node" {
-            // Check command line arguments
-            if let Some(cmd) = process.cmd().get(0) {
-                cmd.to_lowercase() == "claude"
-            } else {
-                false
-            }
-        } else {
-            false
-        };
-
-        // Log ALL Claude processes
-        if is_claude {
-            writeln!(debug_file, "Found Claude process: PID {}, cmd={:?}", pid, process.cmd()).unwrap();
+    // Convert SessionState to Miner for each session
+    for (session_id, session_state) in sessions.iter() {
+        // Skip only truly invalid sessions ($SESSION_ID or sessions with PID=0 that never got a real PID)
+        if session_id == "$SESSION_ID" {
+            println!("[get_miners] Skipping invalid session: {} (pid={})", session_id, session_state.pid);
+            continue;
         }
 
-        // Match Claude Code sessions
-        if is_claude {
-            let pid_u32 = pid.as_u32();
+        // Skip sessions with PID=0 only if they're not working (PID=0 means we haven't discovered the PID yet)
+        if session_state.pid == 0 && session_state.current_status != "working" {
+            println!("[get_miners] Skipping session without PID: {} (status={})", session_id, session_state.current_status);
+            continue;
+        }
 
-            // Get cached CPU value (non-blocking)
-            let cpu = {
-                let cache = cpu_cache.lock().unwrap();
-                cache.get(&pid_u32).copied().unwrap_or(0.0)
-            };
+        println!("[get_miners] Processing session: {}", session_id);
+        println!("[get_miners]   - PID: {}", session_state.pid);
+        println!("[get_miners]   - Status: {}", session_state.current_status);
+        println!("[get_miners]   - Has terminal: {} (zombie={})",
+            session_state.has_terminal,
+            session_state.current_status == "zombie");
 
-            let disk_usage = process.disk_usage();
+        let pid = Pid::from_u32(session_state.pid);
 
-            // Calculate total disk activity (read + write bytes per second)
-            let disk_activity = disk_usage.read_bytes + disk_usage.written_bytes;
-
-            // Get memory usage
-            let memory_mb = process.memory() / 1024 / 1024;
-
-            // Determine status based on real-time system metrics
-            // Working if ANY of these conditions are true:
-            // 1. CPU usage above 3% (lowered threshold for better detection)
-            // 2. Disk I/O above 5KB/s (lowered threshold)
-            // 3. Memory usage growing significantly (> 100MB suggests active session)
-
-            let is_working_by_cpu = cpu > 3.0;
-            let is_working_by_disk = disk_activity > 5120; // 5KB/s
-            let is_potentially_active = memory_mb > 100; // Active sessions typically use more memory
-
-            // Simple OR logic: working if CPU OR Disk activity detected
-            // Memory is just for info, not for status determination
-            let status = if is_working_by_cpu || is_working_by_disk {
-                "working".to_string()
-            } else {
-                "resting".to_string()
-            };
-
-            // On macOS, check if process has a terminal by checking TTY
-            #[cfg(target_os = "macos")]
-            let has_terminal = {
-                use std::process::Command;
-                let output = Command::new("ps")
-                    .args(["-p", &pid_u32.to_string(), "-o", "tty="])
-                    .output();
-
-                if let Ok(output) = output {
-                    let tty = String::from_utf8_lossy(&output.stdout);
-                    let tty = tty.trim();
-                    // If TTY is "??" or empty, process has no terminal
-                    !tty.is_empty() && tty != "??"
-                } else {
-                    true  // Default to true if we can't determine
-                }
-            };
-
-            #[cfg(target_os = "windows")]
-            let has_terminal = true;  // Windows doesn't have TTY concept
-
-            writeln!(debug_file, "  -> CPU: {:.1}%{}, Disk: {} KB/s{}, Memory: {} MB{}, TTY: {}, Status: {}",
-                cpu,
-                if is_working_by_cpu { " ✓" } else { "" },
-                disk_activity / 1024,
-                if is_working_by_disk { " ✓" } else { "" },
-                memory_mb,
-                if is_potentially_active { " ✓" } else { "" },
-                has_terminal,
-                status).unwrap();
-
-            miners.push(Miner {
-                pid: pid_u32,
-                cpu_usage: cpu,
-                memory: process.memory(),
-                status,
-                has_terminal,
-                name: "Claude Code".to_string(),  // Display name
+        // Get memory from sysinfo
+        let memory = sys.process(pid)
+            .map(|p| {
+                let mem = p.memory();
+                println!("[get_miners]   - Memory: {} bytes", mem);
+                mem
+            })
+            .unwrap_or_else(|| {
+                println!("[get_miners]   - Memory: 0 (process not found in sysinfo)");
+                0
             });
-        }
+
+        // Get CPU from last CPU event
+        let cpu = session_state.last_cpu_event.as_ref()
+            .map(|e| {
+                println!("[get_miners]   - CPU (from event): {:.1}%", e.cpu_percent);
+                e.cpu_percent
+            })
+            .unwrap_or_else(|| {
+                println!("[get_miners]   - CPU: 0.0% (no CPU event)");
+                0.0
+            });
+
+
+        println!("[get_miners]   Session {}: pid={}, status={}, cpu={:.1}%, mem={}KB, has_terminal={}",
+            &session_id[..8], session_state.pid, session_state.current_status, cpu, memory/1024, session_state.has_terminal);
+
+        miners.push(Miner {
+            pid: session_state.pid,
+            cpu_usage: cpu,
+            memory,
+            status: session_state.current_status.to_string(),
+            has_terminal: session_state.has_terminal,
+            name: "Claude Code".to_string(),
+        });
     }
 
-    writeln!(debug_file, "=== Total miners found: {} ===", miners.len()).unwrap();
+    println!("[get_miners] Returning {} miners", miners.len());
+    println!("[get_miners] Miners by status:");
+    let working = miners.iter().filter(|m| m.status == "working").count();
+    let resting = miners.iter().filter(|m| m.status == "resting").count();
+    let zombie = miners.iter().filter(|m| m.status == "zombie").count();
+    println!("[get_miners]   - working: {}", working);
+    println!("[get_miners]   - resting: {}", resting);
+    println!("[get_miners]   - zombie: {}", zombie);
+    println!("[get_miners] ===== END =====");
+
     miners
 }
 
@@ -166,14 +126,28 @@ fn kill_miner(pid: u32) -> Result<String, String> {
     #[cfg(target_os = "macos")]
     {
         use std::process::Command;
+
+        // Kill process
         let output = Command::new("kill")
             .arg("-9")
             .arg(pid.to_string())
             .output();
 
         match output {
-            Ok(_) => Ok(format!("Process {} killed successfully", pid)),
-            Err(e) => Err(format!("Failed to kill process {}: {}", pid, e)),
+            Ok(result) => {
+                if result.status.success() {
+                    println!("[kill_miner] Successfully killed PID {}", pid);
+
+                    // Send notification directly
+                    notification::send_zombie_killed_notification(pid);
+
+                    Ok(format!("Process {} killed successfully", pid))
+                } else {
+                    let stderr = String::from_utf8_lossy(&result.stderr);
+                    Err(format!("Failed to kill process {}: {}", pid, stderr))
+                }
+            }
+            Err(e) => Err(format!("Failed to execute kill command: {}", e)),
         }
     }
 
@@ -185,7 +159,10 @@ fn kill_miner(pid: u32) -> Result<String, String> {
             .output();
 
         match output {
-            Ok(_) => Ok(format!("Process {} killed successfully", pid)),
+            Ok(_) => {
+                println!("[kill_miner] Successfully killed PID {}", pid);
+                Ok(format!("Process {} killed successfully", pid))
+            }
             Err(e) => Err(format!("Failed to kill process {}: {}", pid, e)),
         }
     }
@@ -259,95 +236,29 @@ fn uninstall_app() -> Result<String, String> {
 
 #[tauri::command]
 fn update_tray_menu(
-    app_handle: AppHandle,
     total: u32,
     working: u32,
     resting: u32,
     zombie: u32
 ) -> Result<(), String> {
-    use tauri::{SystemTrayMenu, SystemTrayMenuItem};
+    // Delegate to event module (singleton pattern)
+    event::update_tray_menu(total, working, resting, zombie)
+}
 
-    let tray = app_handle.tray_handle();
-
-    // Update tooltip
-    tray.set_tooltip(&format!("ClaudeMiner - {} sessions", total))
-        .map_err(|e| e.to_string())?;
-
-    // Create new menu with stats
-    let stats_label = CustomMenuItem::new("stats".to_string(),
-        format!("📊 Active Sessions: {}", total)).disabled();
-    let working_label = CustomMenuItem::new("working".to_string(),
-        format!("⛏️  Working: {}", working)).disabled();
-    let resting_label = CustomMenuItem::new("resting".to_string(),
-        format!("😴 Resting: {}", resting)).disabled();
-    let zombie_label = CustomMenuItem::new("zombie".to_string(),
-        format!("👻 Zombie: {}", zombie)).disabled();
-
-    let separator1 = SystemTrayMenuItem::Separator;
-    let show = CustomMenuItem::new("show".to_string(), "Show Window");
-    let separator2 = SystemTrayMenuItem::Separator;
-    let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-
-    let tray_menu = SystemTrayMenu::new()
-        .add_item(stats_label)
-        .add_item(working_label)
-        .add_item(resting_label)
-        .add_item(zombie_label)
-        .add_native_item(separator1)
-        .add_item(show)
-        .add_native_item(separator2)
-        .add_item(quit);
-
-    tray.set_menu(tray_menu)
-        .map_err(|e| e.to_string())?;
-
-    Ok(())
+#[tauri::command]
+fn send_test_notification() -> Result<String, String> {
+    println!("[TestNotification] 🔔 Sending test notification...");
+    notification::send_test_notification();
+    Ok("Test notification sent!".to_string())
 }
 
 fn main() {
-    // Create CPU cache shared between background thread and main thread
-    let cpu_cache: CpuCache = Arc::new(Mutex::new(HashMap::new()));
-    let cpu_cache_clone = cpu_cache.clone();
+    // Create session cache for monitor system
+    let session_cache = Arc::new(Mutex::new(HashMap::new()));
 
-    // Spawn background thread for CPU measurement
-    thread::spawn(move || {
-        let mut sys = System::new_all();
-        loop {
-            // Refresh CPU usage for all processes
-            sys.refresh_all();
-
-            // Wait for CPU measurement to stabilize (sysinfo requires 2 refreshes)
-            thread::sleep(Duration::from_millis(200));
-            sys.refresh_all();
-
-            // Update cache with fresh CPU measurements
-            let mut cache = cpu_cache_clone.lock().unwrap();
-            cache.clear();
-
-            for (pid, process) in sys.processes() {
-                let name = process.name().to_string();
-
-                // Only cache Claude Code processes to save memory
-                let is_claude = if name.to_lowercase() == "node" {
-                    if let Some(cmd) = process.cmd().get(0) {
-                        cmd.to_lowercase() == "claude"
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                };
-
-                if is_claude {
-                    cache.insert(pid.as_u32(), process.cpu_usage());
-                }
-            }
-            drop(cache); // Release lock
-
-            // Update every 1 second
-            thread::sleep(Duration::from_millis(800));
-        }
-    });
+    // Create shared sessions for real-time monitoring
+    let shared_sessions = Arc::new(Mutex::new(HashMap::new()));
+    let shared_sessions_for_command = shared_sessions.clone();
 
     // Create system tray menu
     let show = CustomMenuItem::new("show".to_string(), "Show Window");
@@ -392,7 +303,7 @@ fn main() {
         ));
 
     tauri::Builder::default()
-        .manage(cpu_cache) // Register CPU cache as Tauri state
+        .manage(shared_sessions_for_command) // Register shared sessions from Coordinator
         .menu(app_menu)
         .on_menu_event(|event| {
             match event.menu_item_id() {
@@ -424,8 +335,51 @@ fn main() {
             kill_miner,
             send_notification,
             update_tray_menu,
-            uninstall_app
+            uninstall_app,
+            send_test_notification
         ])
+        .setup(move |app| {
+            // Start multi-threaded monitoring system with app_handle
+            let app_handle = app.handle();
+
+            // Initialize notification system (singleton pattern)
+            notification::init(app_handle.clone());
+
+            // Initialize event emitter (singleton pattern)
+            event::init(app_handle.clone());
+
+            // Create communication channels
+            use std::sync::mpsc::channel;
+            let (event_sender, event_receiver) = channel();
+
+            // Create shared PID set for monitors
+            use std::collections::HashSet;
+            let claude_pids = Arc::new(Mutex::new(HashSet::new()));
+
+            // Start all monitoring threads
+            let _cpu_monitor = monitor::start_cpu_monitor(event_sender.clone(), claude_pids.clone());
+            let _log_watcher = monitor::start_log_watcher(event_sender.clone());
+
+            // Start hook receiver (no app_handle needed - uses notification module)
+            let _hook_receiver = hooks::start_hook_receiver(event_sender.clone());
+
+            // Start session cleaner (returns handle and sender)
+            let (_cleaner_handle, cleanup_sender) = session::start_session_cleaner(
+                shared_sessions.clone(),
+                event_sender.clone(),
+            );
+
+            // Start coordinator with cleanup support (no app_handle needed - uses event module)
+            let _coordinator = coordinator::start_coordinator_with_cleanup(
+                event_receiver,
+                session_cache,
+                shared_sessions,
+                cleanup_sender,
+            );
+
+            println!("[Main] Multi-threaded monitoring system started with Tauri events");
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

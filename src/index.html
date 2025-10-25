@@ -15,10 +15,7 @@
                     <p class="subtitle">Visual Process Monitor for Claude Code</p>
                 </div>
                 <div class="header-buttons">
-                    <a href="https://buymeacoffee.com/jukijung" target="_blank" class="coffee-button" title="Support the project">
-                        <span class="button-icon">☕</span>
-                        <span class="button-text">Buy Me a Coffee</span>
-                    </a>
+                    <!-- <button class="test-notification-button" id="test-notification-btn" title="Test Notification">🔔</button> -->
                     <button class="settings-button" id="settings-btn" title="Settings">⚙️</button>
                 </div>
             </div>
@@ -40,16 +37,6 @@
                         <p class="setting-description">Get alerts when tasks complete or zombie processes are detected</p>
                     </div>
                     <div class="setting-item">
-                        <label for="refresh-interval">Refresh Interval</label>
-                        <p class="setting-description">How often to check for process updates</p>
-                        <select id="refresh-interval">
-                            <option value="1000">1 second (Fast)</option>
-                            <option value="2000" selected>2 seconds (Default)</option>
-                            <option value="5000">5 seconds (Slow)</option>
-                            <option value="10000">10 seconds (Very Slow)</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
                         <label for="language-select">Language</label>
                         <p class="setting-description">Choose your preferred language</p>
                         <select id="language-select">
@@ -67,18 +54,6 @@
                             Made with ❤️ for Claude Code users
                         </p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <a href="https://buymeacoffee.com/jukijung" target="_blank" style="
-                                display: inline-block;
-                                padding: 10px 20px;
-                                background: linear-gradient(135deg, #FFDD00, #FBB034);
-                                color: #000;
-                                text-decoration: none;
-                                border-radius: 8px;
-                                font-weight: bold;
-                                transition: transform 0.2s ease;
-                            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                ☕ Buy Me a Coffee
-                            </a>
                             <a href="https://tally.so/r/nrxJXo" target="_blank" style="
                                 display: inline-block;
                                 padding: 10px 20px;
@@ -92,9 +67,6 @@
                                 💬 Send Feedback
                             </a>
                         </div>
-                        <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">
-                            This app is 100% free. Your support keeps it alive!
-                        </p>
                     </div>
                 </div>
             </div>
@@ -102,7 +74,7 @@
 
         <div class="stats-panel">
             <div class="stat">
-                <span class="stat-label">Active Sessions</span>
+                <span class="stat-label">Total Sessions</span>
                 <span class="stat-value" id="total-count">0</span>
             </div>
             <div class="stat working">
@@ -114,43 +86,31 @@
                 <span class="stat-value" id="resting-count">0</span>
             </div>
             <div class="stat zombie">
-                <span class="stat-label">👻 Zombie</span>
+                <span class="stat-label">🧟 Zombie</span>
                 <span class="stat-value" id="zombie-count">0</span>
             </div>
         </div>
 
         <!-- Metaverse-style Mining World -->
         <div class="mining-world" id="mining-world">
-            <!-- Background elements -->
-            <div class="world-background">
-                <div class="mining-zone">⛏️ Mining Zone</div>
-                <div class="rest-zone">😴 Rest Zone</div>
-                <div class="danger-zone">👻 Danger Zone</div>
-            </div>
             <!-- Miners will be dynamically added here -->
-
-            <!-- Refresh info inside mining world -->
-            <div class="refresh-info">
-                <span>🔄 <span id="refresh-rate">2s</span></span>
-                <span id="last-update"></span>
-            </div>
         </div>
 
         <!-- Legend -->
         <div class="legend">
             <div class="legend-item">
                 <span class="legend-icon working">⛏️</span>
-                <span>Working (Mining)</span>
+                <span>Working</span>
             </div>
             <div class="legend-item">
                 <span class="legend-icon resting">😴</span>
-                <span>Resting (Idle)</span>
+                <span>Resting</span>
             </div>
             <div class="legend-item">
-                <span class="legend-icon zombie">👻</span>
-                <span>Zombie (Wandering)</span>
+                <span class="legend-icon zombie">🧟</span>
+                <span>Zombie</span>
             </div>
-            <div class="legend-tip" data-i18n="legendTip">Click miner to see PID • Zombies can be terminated</div>
+            <div class="legend-tip" data-i18n="legendTip">Click icon to see PID • Zombies can be terminated</div>
         </div>
     </div>
 

@@ -192,8 +192,8 @@ class MinerEntity {
 
         // Get icon based on status
         let icon;
-        if (!this.has_terminal) {
-            icon = '👻';
+        if (!this.has_terminal || this.status === 'zombie') {
+            icon = '🧟';
             element.classList.add('zombie');
         } else if (this.status === 'working') {
             icon = '⛏️';
@@ -235,13 +235,13 @@ class MinerEntity {
             // Update visual
             if (this.element) {
                 this.element.className = `miner-entity ${this.status}`;
-                if (!this.has_terminal) {
+                if (!this.has_terminal || this.status === 'zombie') {
                     this.element.classList.add('zombie');
                 }
 
                 let icon;
-                if (!this.has_terminal) {
-                    icon = '👻';
+                if (!this.has_terminal || this.status === 'zombie') {
+                    icon = '🧟';
                 } else if (this.status === 'working') {
                     icon = '⛏️';
                 } else {
@@ -298,7 +298,20 @@ class MetaverseWorld {
     }
 
     startAnimationLoop() {
+        let lastFrameTime = 0;
+        const FPS_LIMIT = 30; // Limit to 30fps to save CPU (instead of 60fps)
+        const FRAME_INTERVAL = 1000 / FPS_LIMIT;
+
         const animate = (currentTime) => {
+            // Throttle to FPS_LIMIT
+            const elapsed = currentTime - lastFrameTime;
+            if (elapsed < FRAME_INTERVAL) {
+                this.animationFrameId = requestAnimationFrame(animate);
+                return;
+            }
+
+            lastFrameTime = currentTime - (elapsed % FRAME_INTERVAL);
+
             const deltaTime = currentTime - this.lastUpdateTime;
             this.lastUpdateTime = currentTime;
 

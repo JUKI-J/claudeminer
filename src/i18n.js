@@ -25,18 +25,14 @@ const translations = {
         cpu: "CPU",
         memory: "MEM",
         killProcess: "Kill Process",
-        confirmKill: "Kill process #",
+        confirmKill: "Kill process #{pid}?",
         processCopied: "✓ Copied!",
 
         // Settings
         settings: "Settings",
         enableNotifications: "Enable Notifications",
-        refreshInterval: "Refresh Interval",
-        second: "second",
-        seconds: "seconds",
         about: "About",
         version: "ClaudeMiner v1.0.0",
-        support: "☕ Buy Me a Coffee",
         language: "Language",
 
         // Notifications
@@ -56,7 +52,7 @@ const translations = {
         lastUpdated: "Last updated",
 
         // Legend
-        legendTip: "Click miner to see PID • Zombies can be terminated"
+        legendTip: "Click icon to see PID • Zombies can be terminated"
     },
 
     ko: {
@@ -84,18 +80,14 @@ const translations = {
         cpu: "CPU",
         memory: "메모리",
         killProcess: "프로세스 종료",
-        confirmKill: "프로세스 #을(를) 종료하시겠습니까? ",
+        confirmKill: "프로세스 #{pid}을(를) 종료하시겠습니까?",
         processCopied: "✓ 복사됨!",
 
         // Settings
         settings: "설정",
         enableNotifications: "알림 활성화",
-        refreshInterval: "새로고침 간격",
-        second: "초",
-        seconds: "초",
         about: "정보",
         version: "ClaudeMiner v1.0.0",
-        support: "☕ 커피 사주기",
         language: "언어",
 
         // Notifications
@@ -115,7 +107,7 @@ const translations = {
         lastUpdated: "마지막 업데이트",
 
         // Legend
-        legendTip: "광부를 클릭하여 PID 확인 • 좀비 프로세스는 종료 가능"
+        legendTip: "아이콘을 클릭하여 PID 확인 • 좀비 프로세스는 종료 가능"
     },
 
     ja: {
@@ -143,18 +135,14 @@ const translations = {
         cpu: "CPU",
         memory: "メモリ",
         killProcess: "プロセス終了",
-        confirmKill: "プロセス #を終了しますか？",
+        confirmKill: "プロセス #{pid}を終了しますか？",
         processCopied: "✓ コピーしました！",
 
         // Settings
         settings: "設定",
         enableNotifications: "通知を有効化",
-        refreshInterval: "更新間隔",
-        second: "秒",
-        seconds: "秒",
         about: "情報",
         version: "ClaudeMiner v1.0.0",
-        support: "☕ コーヒーをおごる",
         language: "言語",
 
         // Notifications
@@ -174,7 +162,7 @@ const translations = {
         lastUpdated: "最終更新",
 
         // Legend
-        legendTip: "マイナーをクリックするとPIDを確認できます • ゾンビプロセスは終了できます"
+        legendTip: "アイコンをクリックするとPIDを確認できます • ゾンビプロセスは終了できます"
     },
 
     es: {
@@ -202,18 +190,14 @@ const translations = {
         cpu: "CPU",
         memory: "MEM",
         killProcess: "Terminar Proceso",
-        confirmKill: "¿Terminar proceso #",
+        confirmKill: "¿Terminar proceso #{pid}?",
         processCopied: "✓ ¡Copiado!",
 
         // Settings
         settings: "Configuración",
         enableNotifications: "Activar Notificaciones",
-        refreshInterval: "Intervalo de Actualización",
-        second: "segundo",
-        seconds: "segundos",
         about: "Acerca de",
         version: "ClaudeMiner v1.0.0",
-        support: "☕ Invítame un Café",
         language: "Idioma",
 
         // Notifications
@@ -233,7 +217,7 @@ const translations = {
         lastUpdated: "Última actualización",
 
         // Legend
-        legendTip: "Haz clic en el minero para ver PID • Los zombies pueden terminarse"
+        legendTip: "Haz clic en el icono para ver PID • Los zombies pueden terminarse"
     }
 };
 
@@ -299,19 +283,16 @@ function updateAllUIText() {
 
         // Stats labels - actual structure uses .stat not .stat-card
         const stats = document.querySelectorAll('.stat .stat-label');
-        if (stats[0]) stats[0].textContent = 'Active Sessions';
+        if (stats[0]) stats[0].textContent = 'Total Sessions';
         if (stats[1]) stats[1].textContent = '⛏️ Working';
         if (stats[2]) stats[2].textContent = '😴 Resting';
-        if (stats[3]) stats[3].textContent = '👻 Zombie';
+        if (stats[3]) stats[3].textContent = '🧟 Zombie';
 
         // Settings modal - safe access
         const notifLabel = document.querySelectorAll('.setting-item label')[0];
         if (notifLabel && notifLabel.childNodes[2]) {
             notifLabel.childNodes[2].textContent = ` ${translate('enableNotifications')}`;
         }
-
-        const refreshLabel = document.querySelector('label[for="refresh-interval"]');
-        if (refreshLabel) refreshLabel.textContent = translate('refreshInterval');
 
         const langLabel = document.querySelector('label[for="language-select"]');
         if (langLabel) langLabel.textContent = translate('language');
