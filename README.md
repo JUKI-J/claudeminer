@@ -261,7 +261,7 @@ graph TD
 
 ```bash
 # Download latest release
-curl -L https://github.com/JUKI/claudeminer/releases/download/v1.1.0/ClaudeMiner_1.1.0_universal.dmg -o ClaudeMiner.dmg
+curl -L https://github.com/JUKI-J/claudeminer/releases/download/1.1.1/ClaudeMiner_1.1.1_aarch64.dmg -o ClaudeMiner.dmg
 
 # Mount and install
 hdiutil mount ClaudeMiner.dmg
