@@ -1,12 +1,15 @@
 # 🪨 ClaudeMiner v1.1.0
-> A visual process monitor designed exclusively for macOS Claude Code users
-
-![ClaudeMiner Demo](screenshots/demo.gif)
-
 [![Version](https://img.shields.io/badge/version-1.1.0-blue)]()
 [![Platform](https://img.shields.io/badge/platform-macOS-black)]()
 [![Architecture](https://img.shields.io/badge/arch-Universal-orange)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
+
+> A visual process monitor designed exclusively for macOS Claude Code users
+
+<div align="center">
+  <img src="screenshots/main.png" alt="ClaudeMiner Main Interface" width="800">
+  <p><i>Real-time monitoring of Claude Code sessions with visual status indicators</i></p>
+</div>
 
 ## 🎯 The Problem & Solution
 
@@ -277,6 +280,7 @@ ClaudeMiner supports multiple languages with automatic detection:
 🇺🇸 English (EN)    - Default
 🇰🇷 한국어 (KO)      - Korean
 🇯🇵 日本語 (JA)      - Japanese
+🇪🇸 Español (ES)    - Spanish
 ```
 
 Language is automatically detected from your system settings and can be changed in the app settings.
@@ -433,13 +437,17 @@ This is a personal project, but feedback is welcome:
 
 ## 📝 Changelog
 
-### v1.1.0 (2024-10-25) - Complete Architecture Overhaul
-- 🆕 Hook-based session detection
+### v1.1.0 (2025-10-25) - Complete Architecture Overhaul
+- 🏗️ Refactored monolithic main.rs into modular architecture
+- 🆕 Hook-based session detection with event-driven coordinator
 - 🚀 Real-time event processing (<100ms)
 - 🔄 Legacy session auto-upgrade
-- 🎯 MPSC channel architecture
+- 🎯 MPSC channel architecture with multi-threaded monitoring
+- 📦 New modules: coordinator, monitor, hooks, notification, event, session, status
 - 💾 Memory optimization (30% reduction)
-- 🐛 Fixed zombie detection accuracy
+- 🔔 Task completion and zombie termination notifications
+- 🌏 Multi-language support (EN, KO, JA, ES)
+- 🐛 Fixed zombie detection, PID=0 sessions, and notification delivery
 
 ### v1.0.0 (2024-10-23) - Initial Release
 - ✅ Basic process monitoring
@@ -448,7 +456,7 @@ This is a personal project, but feedback is welcome:
 
 ## 📄 License
 
-MIT © 2024 JUKI
+MIT © 2025 JUKI
 
 ```
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND
