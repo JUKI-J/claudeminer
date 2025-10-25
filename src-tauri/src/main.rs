@@ -348,6 +348,11 @@ fn main() {
             // Initialize event emitter (singleton pattern)
             event::init(app_handle.clone());
 
+            // Ensure hooks are registered in Claude Code settings.json
+            if let Err(e) = hooks::ensure_hooks_registered() {
+                eprintln!("[Main] Failed to register hooks: {}", e);
+            }
+
             // Create communication channels
             use std::sync::mpsc::channel;
             let (event_sender, event_receiver) = channel();

@@ -37,12 +37,14 @@ pub struct ClaudeSettings {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct HookEvents {
-    #[serde(rename = "SessionStart")]
-    pub session_start: Vec<HookConfig>,
     #[serde(rename = "UserPromptSubmit")]
     pub user_prompt_submit: Vec<HookConfig>,
     #[serde(rename = "Stop")]
     pub stop: Vec<HookConfig>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    #[serde(rename = "SessionStart")]
+    pub session_start: Vec<HookConfig>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     #[serde(rename = "SessionEnd")]
     pub session_end: Vec<HookConfig>,
 }
@@ -160,10 +162,9 @@ pub fn register_hooks() -> io::Result<()> {
     };
 
     // Register hooks for each event
-    add_hook(&mut settings.hooks.session_start, "start");
+    // Note: SessionStart and SessionEnd hooks removed to avoid slowing down Claude Code startup
     add_hook(&mut settings.hooks.user_prompt_submit, "working");
     add_hook(&mut settings.hooks.stop, "resting");
-    add_hook(&mut settings.hooks.session_end, "end");
 
     // Write updated settings
     write_settings(&settings)?;
@@ -186,10 +187,8 @@ pub fn unregister_hooks() -> io::Result<()> {
     };
 
     // Remove hooks from each event
-    remove_hooks(&mut settings.hooks.session_start);
     remove_hooks(&mut settings.hooks.user_prompt_submit);
     remove_hooks(&mut settings.hooks.stop);
-    remove_hooks(&mut settings.hooks.session_end);
 
     // Write updated settings
     write_settings(&settings)?;

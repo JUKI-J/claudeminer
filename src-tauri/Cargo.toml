@@ -1,6 +1,6 @@
 [package]
 name = "claude-miner"
-version = "1.0.0"
+version = "1.1.1"
 description = "A visual process monitor for Claude Code sessions"
 authors = ["JUKI-J"]
 license = "MIT"
